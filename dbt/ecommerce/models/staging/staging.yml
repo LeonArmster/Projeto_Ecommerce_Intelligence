@@ -108,8 +108,7 @@ models:
           - accepted_values:
               arguments:
                 values:
-                  - delivered
-                  - shipped
+                  - completed
                   - processing
                   - cancelled
 

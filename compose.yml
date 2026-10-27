@@ -3,6 +3,7 @@ services:
   postgres:
     image: postgres:17
     container_name: ecommerce-postgres
+    shm_size: 1gb
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB}

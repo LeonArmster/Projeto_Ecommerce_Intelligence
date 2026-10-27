@@ -1,0 +1,310 @@
+version: 2
+
+models:
+  # ============================================================
+  # Order items enriquecido
+  # ============================================================
+  - name: int_order_items_enriched
+    description: >
+      Itens de pedidos enriquecidos com informações de produto
+      e métricas monetárias. Mantém uma linha por item de pedido.
+
+    columns:
+
+      - name: order_item_id
+        description: "Identificador único do item de pedido."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: order_id
+        description: "Identificador do pedido."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: product_id
+        description: "Identificador do produto."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+
+      - name: category
+        description: "Categoria do produto."
+        data_tests:
+          - not_null
+
+      - name: brand
+        description: "Marca do produto."
+        data_tests:
+          - not_null
+
+      - name: weight_kg
+        description: "Peso unitário do produto em quilogramas."
+        data_tests:
+          - not_null
+
+      - name: quantity
+        description: "Quantidade adquirida do produto."
+        data_tests:
+          - not_null
+
+      - name: unit_price
+        description: "Preço unitário praticado na compra."
+        data_tests:
+          - not_null
+
+      - name: discount_pct
+        description: "Percentual de desconto aplicado ao item."
+        data_tests:
+          - not_null
+
+      - name: gross_amount
+        description: "Valor bruto do item antes do desconto."
+        data_tests:
+          - not_null
+
+      - name: discount_amount
+        description: "Valor monetário concedido em desconto."
+        data_tests:
+          - not_null
+
+      - name: net_amount
+        description: "Valor líquido do item após o desconto."
+        data_tests:
+          - not_null
+
+
+
+  # ============================================================
+  # Order items agregado por pedido
+  # ============================================================
+  - name: int_order_items_aggregated
+    description: >
+      Métricas dos itens agregadas no nível do pedido.
+      Mantém exatamente uma linha por order_id.
+
+    columns:
+
+      - name: order_id
+        description: "Identificador único do pedido."
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: item_count
+        description: "Quantidade de linhas de itens existentes no pedido."
+        data_tests:
+          - not_null
+
+      - name: distinct_products
+        description: "Quantidade de produtos distintos existentes no pedido."
+        data_tests:
+          - not_null
+
+      - name: total_quantity
+        description: "Quantidade total de unidades adquiridas no pedido."
+        data_tests:
+          - not_null
+
+      - name: gross_amount
+        description: "Valor bruto total do pedido antes dos descontos."
+        data_tests:
+          - not_null
+
+      - name: discount_amount
+        description: "Valor total de descontos concedidos no pedido."
+        data_tests:
+          - not_null
+
+      - name: net_amount
+        description: "Valor líquido total dos itens do pedido."
+        data_tests:
+          - not_null
+
+      - name: total_weight_kg
+        description: "Peso total dos produtos do pedido em quilogramas."
+        data_tests:
+          - not_null
+
+
+
+  # ============================================================
+  # Logística de entrega
+  # ============================================================
+  - name: int_shipments_enriched
+    description: >
+      Informações logísticas enriquecidas com métricas
+      derivadas do processo de entrega.
+
+    columns:
+
+      - name: shipment_id
+        description: "Identificador único do envio."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: order_id
+        description: "Identificador do pedido associado ao envio."
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: shipped_at
+        description: "Data e hora de despacho do pedido."
+        data_tests:
+          - not_null
+
+      - name: estimated_delivery_at
+        description: "Data e hora previstas para a entrega."
+        data_tests:
+          - not_null
+
+      - name: delivered_at
+        description: "Data e hora efetivas da entrega."
+
+      - name: delivery_duration
+        description: >
+          Intervalo entre o despacho e a entrega efetiva
+          do pedido.
+
+      - name: is_delayed
+        description: >
+          Indica se o pedido foi entregue após a data
+          estimada. Permanece nulo enquanto não houver
+          entrega efetiva.
+
+
+
+  # ============================================================
+  # Centralizador de pedidos
+  # ============================================================
+  - name: int_orders_enriched
+    description: >
+      Entidade analítica central de pedidos, enriquecida com
+      informações de cliente, itens, pagamento, logística e
+      avaliação. Mantém exatamente uma linha por pedido.
+
+    columns:
+
+      - name: order_id
+        description: "Identificador único do pedido."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Identificador do cliente responsável pelo pedido."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+      - name: order_at
+        description: "Data e hora de realização do pedido."
+        data_tests:
+          - not_null
+
+      - name: order_status
+        description: "Status do pedido."
+        data_tests:
+          - not_null
+
+      - name: shipping_type
+        description: "Modalidade de entrega do pedido."
+        data_tests:
+          - not_null
+
+      - name: customer_state
+        description: "UF associada ao cliente."
+
+      - name: customer_birth_date
+        description: "Data de nascimento do cliente."
+
+      - name: customer_created_at
+        description: "Data e hora de criação do cadastro do cliente."
+
+      - name: item_count
+        description: "Quantidade de linhas de itens do pedido."
+
+      - name: distinct_products
+        description: "Quantidade de produtos distintos no pedido."
+
+      - name: total_quantity
+        description: "Quantidade total de unidades adquiridas."
+
+      - name: gross_amount
+        description: "Valor bruto dos itens antes dos descontos."
+
+      - name: discount_amount
+        description: "Valor total concedido em descontos."
+
+      - name: net_amount
+        description: "Valor líquido dos itens após os descontos."
+
+      - name: total_weight_kg
+        description: "Peso total dos produtos do pedido."
+
+      - name: payment_id
+        description: "Identificador do pagamento."
+
+      - name: payment_method
+        description: "Meio de pagamento utilizado."
+
+      - name: payment_amount
+        description: "Valor registrado no pagamento."
+
+      - name: installments
+        description: "Quantidade de parcelas."
+
+      - name: payment_status
+        description: "Status do pagamento."
+
+      - name: paid_at
+        description: "Data e hora de confirmação do pagamento."
+
+      - name: shipment_id
+        description: "Identificador do envio."
+
+      - name: shipped_at
+        description: "Data e hora de despacho."
+
+      - name: estimated_delivery_at
+        description: "Data e hora previstas para entrega."
+
+      - name: delivered_at
+        description: "Data e hora efetivas da entrega."
+
+      - name: delivery_duration
+        description: "Intervalo entre despacho e entrega."
+
+      - name: is_delayed
+        description: >
+          Indica se a entrega ocorreu após a previsão.
+          Permanece nulo quando ainda não existe entrega efetiva.
+
+      - name: review_id
+        description: "Identificador da avaliação."
+
+      - name: rating
+        description: "Nota atribuída pelo cliente, de 1 a 5."
+
+      - name: reviewed_at
+        description: "Data e hora da avaliação."

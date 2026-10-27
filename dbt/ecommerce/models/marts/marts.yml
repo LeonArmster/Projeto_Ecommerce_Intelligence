@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  # ============================================================
+  # Tabela fato das vendas diárias
+  # ============================================================
+  - name: fct_daily_sales
+    description: >
+      Fato diário de performance comercial e operacional do
+      e-commerce. Mantém uma linha por data de realização
+      dos pedidos.
+
+    columns:
+
+      - name: order_date
+        description: "Data de realização dos pedidos."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: total_orders
+        description: "Quantidade total de pedidos realizados no dia."
+        data_tests:
+          - not_null
+
+      - name: valid_orders
+        description: >
+          Quantidade de pedidos não cancelados no dia.
+        data_tests:
+          - not_null
+
+      - name: cancelled_orders
+        description: "Quantidade de pedidos cancelados no dia."
+        data_tests:
+          - not_null
+
+      - name: total_customers
+        description: >
+          Quantidade de clientes distintos que realizaram pedidos no dia.
+        data_tests:
+          - not_null
+
+      - name: total_units
+        description: >
+          Quantidade total de unidades associadas aos pedidos
+          não cancelados.
+
+      - name: gross_amount
+        description: >
+          Valor bruto dos pedidos não cancelados antes dos descontos.
+
+      - name: discount_amount
+        description: >
+          Valor total de descontos dos pedidos não cancelados.
+
+      - name: net_amount
+        description: >
+          Valor líquido dos pedidos não cancelados após descontos.
+
+      - name: avg_order_value
+        description: >
+          Ticket médio dos pedidos não cancelados,
+          calculado como net_amount dividido por valid_orders.
+
+      - name: delayed_orders
+        description: >
+          Quantidade de pedidos entregues após a data prevista.
+
+      - name: delivered_orders
+        description: "Quantidade de pedidos com entrega concluída."
+
+      - name: delay_rate
+        description: >
+          Proporção de pedidos atrasados entre os pedidos
+          que possuem entrega concluída.
+
+      - name: reviewed_orders
+        description: "Quantidade de pedidos que receberam avaliação."
+
+      - name: avg_rating
+        description: "Nota média das avaliações recebidas no dia."
+
+      - name: cancellation_rate
+        description: >
+          Proporção de pedidos cancelados em relação ao
+          total de pedidos realizados.
+
+      - name: review_rate
+        description: >
+          Proporção de pedidos avaliados em relação ao
+          total de pedidos realizados.
+
+
+  # ============================================================
+  # Tabela fato das ordens
+  # ============================================================
+  - name: fct_orders
+    description: >
+      Fato de pedidos no nível transacional, contendo uma linha
+      por pedido e atributos comerciais, financeiros, logísticos
+      e de experiência do cliente. Materializado incrementalmente
+      utilizando order_id como chave única.
+
+    columns:
+
+      - name: order_id
+        description: "Identificador único do pedido."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Identificador do cliente."
+        data_tests:
+          - not_null
+
+      - name: order_at
+        description: "Data e hora de realização do pedido."
+        data_tests:
+          - not_null
+
+      - name: order_status
+        description: "Status atual do pedido."
+        data_tests:
+          - not_null
+
+      - name: net_amount
+        description: "Valor líquido dos itens do pedido."
+
+      - name: is_delayed
+        description: >
+          Indica se o pedido entregue ultrapassou a data
+          prevista de entrega.
+
+      - name: rating
+        description: "Nota atribuída pelo cliente ao pedido."

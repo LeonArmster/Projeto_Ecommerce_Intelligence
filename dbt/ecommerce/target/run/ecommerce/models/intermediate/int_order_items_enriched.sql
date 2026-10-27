@@ -1,0 +1,51 @@
+
+  create view "ecommerce"."analytics_intermediate"."int_order_items_enriched__dbt_tmp"
+    
+    
+  as (
+    with order_items as (
+
+    select *
+    from "ecommerce"."analytics_staging"."stg_order_items"
+
+),
+
+products as (
+
+    select *
+    from "ecommerce"."analytics_staging"."stg_products"
+
+),
+
+enriched as (
+
+    select
+        oi.order_item_id,
+        oi.order_id,
+        oi.product_id,
+        p.category,
+        p.brand,
+        p.weight_kg,
+        oi.quantity,
+        oi.unit_price,
+        oi.discount_pct,
+        oi.quantity * oi.unit_price
+            as gross_amount,
+        oi.quantity
+            * oi.unit_price
+            * oi.discount_pct
+            as discount_amount,
+        oi.quantity
+            * oi.unit_price
+            * (1 - oi.discount_pct)
+            as net_amount
+
+    from order_items oi
+    left join products p
+        on oi.product_id = p.product_id
+
+)
+
+select *
+from enriched
+  );
