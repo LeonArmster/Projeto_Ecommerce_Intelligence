@@ -1,0 +1,37 @@
+[project]
+name = "projeto-e-commerce-intelligence"
+version = "0.1.0"
+description = "End-to-end E-commerce Data & AI Engineering project"
+readme = "README.md"
+authors = [
+    { name = "Leon_Armster", email = "leo.armster1994@gmail.com" }
+]
+requires-python = ">=3.12"
+
+dependencies = [
+    "dbt-core>=1.12.6",
+    "dbt-postgres>=1.11.0",
+    "faker>=40.43.0",
+    "numpy>=2.5.4",
+    "pandas>=3.1.0",
+    "psycopg[binary]>=3.3.6",
+    "pyarrow>=26.0.0",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]
+
+[tool.uv]
+package = true
+
+[tool.uv.build-backend]
+module-name = "ecommerce_intelligence"

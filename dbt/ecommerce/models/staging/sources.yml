@@ -1,0 +1,77 @@
+version: 2
+
+sources:
+  - name: ecommerce_raw
+    description: "Dados brutos do e-commerce carregados no PostgreSQL."
+
+    database: ecommerce
+    schema: raw
+
+    tables:
+      - name: customers
+        description: "Cadastro de clientes."
+        columns:
+          - name: customer_id
+            data_tests:
+              - unique
+              - not_null
+
+      - name: products
+        description: "Catálogo de produtos."
+
+      - name: orders
+        description: "Pedidos realizados pelos clientes."
+
+
+
+        columns:
+          - name: order_id
+            description: "Identificador único do pedido."
+            data_tests:
+              - not_null
+              - unique
+
+          - name: customer_id
+            description: "Cliente responsável pelo pedido."
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('ecommerce_raw', 'customers')
+                    field: customer_id
+
+
+
+      - name: order_items
+        description: "Itens associados aos pedidos."
+
+        columns:
+          - name: order_item_id
+            data_tests:
+              - not_null
+              - unique
+
+          - name: order_id
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('ecommerce_raw', 'orders')
+                    field: order_id
+
+          - name: product_id
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('ecommerce_raw', 'products')
+                    field: product_id
+
+      - name: payments
+        description: "Informações de pagamento dos pedidos."
+
+      - name: shipments
+        description: "Informações logísticas e de entrega."
+
+      - name: reviews
+        description: "Avaliações realizadas pelos clientes."
