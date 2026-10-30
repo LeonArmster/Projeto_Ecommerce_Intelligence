@@ -1,3 +1,39 @@
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: docker/airflow/Dockerfile
+
+  environment:
+    PYTHONPATH: /opt/airflow/src
+  
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
+    AIRFLOW__API__BASE_URL: http://localhost:8080
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-api-server:8080/execution/
+
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_DB: ecommerce
+    POSTGRES_USER: ecommerce
+    POSTGRES_PASSWORD: ecommerce
+
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./src:/opt/airflow/src
+    - ./dbt:/opt/airflow/dbt
+    - ./data:/opt/airflow/data
+    - ./sql:/opt/airflow/sql
+    - ./logs:/opt/airflow/logs
+
+  depends_on:
+    airflow-db:
+      condition: service_healthy
+
+    postgres:
+      condition: service_healthy
+
+
 services:
 
   postgres:
@@ -47,6 +83,77 @@ services:
         condition: service_healthy
 
 
+
+  airflow-db:
+    image: postgres:17
+    container_name: ecommerce-airflow-db
+
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U airflow -d airflow"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-scheduler:
+    <<: *airflow-common
+
+    container_name: ecommerce-airflow-scheduler
+
+    command: scheduler
+
+    restart: unless-stopped
+
+
+  airflow-dag-processor:
+    <<: *airflow-common
+
+    container_name: ecommerce-airflow-dag-processor
+
+    command: dag-processor
+
+    restart: unless-stopped
+
+
+  airflow-api-server:
+    <<: *airflow-common
+
+    container_name: ecommerce-airflow-api-server
+
+    command: api-server
+
+    ports:
+      - "8080:8080"
+
+    restart: unless-stopped
+
+
+
+  airflow-init:
+    <<: *airflow-common
+
+    container_name: ecommerce-airflow-init
+
+    command: db migrate
+
+    restart: "no"
+
+
+
 volumes:
   postgres_data:
   pgadmin_data:
+  airflow_postgres_data:
+
+
