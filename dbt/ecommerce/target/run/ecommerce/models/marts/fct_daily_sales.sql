@@ -100,42 +100,34 @@ final as (
         *,
 
         
-
     (
-        net_amount::numeric
-        / nullif(valid_orders, 0)
+        (net_amount)::numeric
+        / nullif((valid_orders), 0)
     )
-
 
             as avg_order_value,
 
         
-
     (
-        cancelled_orders::numeric
-        / nullif(total_orders, 0)
+        (cancelled_orders)::numeric
+        / nullif((total_orders), 0)
     )
-
 
             as cancellation_rate,
 
         
-
     (
-        delayed_orders::numeric
-        / nullif(delivered_orders, 0)
+        (delayed_orders)::numeric
+        / nullif((delivered_orders), 0)
     )
-
 
             as delay_rate,
 
         
-
     (
-        reviewed_orders::numeric
-        / nullif(total_orders, 0)
+        (reviewed_orders)::numeric
+        / nullif((total_orders), 0)
     )
-
 
             as review_rate
 
