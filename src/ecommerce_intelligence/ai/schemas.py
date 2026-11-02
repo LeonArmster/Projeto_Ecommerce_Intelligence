@@ -6,62 +6,41 @@ BUSINESS_BRIEF_SCHEMA = {
             "type": "string"
         },
 
-        "signals": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
+    "signals": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
 
-                    "metric": {
-                        "type": "string"
-                    },
-
-                    "direction": {
-                        "type": "string",
-                        "enum": [
-                            "up",
-                            "down",
-                            "stable"
-                        ]
-                    },
-
-                    "severity": {
-                        "type": "string",
-                        "enum": [
-                            "low",
-                            "medium",
-                            "high"
-                        ]
-                    },
-
-                    "description": {
-                        "type": "string"
-                    },
+                "metric": {
+                    "type": "string"
                 },
 
-                "required": [
-                    "metric",
-                    "direction",
-                    "severity",
-                    "description",
-                ],
+                "description": {
+                    "type": "string"
+                },
             },
-        },
 
-        "attention_points": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-        },
-
-        "investigations": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
+            "required": [
+                "metric",
+                "description",
+            ],
         },
     },
+            "attention_points": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+            },
+
+            "investigations": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+            },
+        },
 
     "required": [
         "executive_summary",

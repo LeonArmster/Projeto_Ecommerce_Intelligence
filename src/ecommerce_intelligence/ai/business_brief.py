@@ -4,10 +4,18 @@
 import json
 from datetime import date, datetime
 from decimal import Decimal
+import logging
+import time
+from ecommerce_intelligence.config.logger import configure_logger
 from ecommerce_intelligence.ai.business_context import get_business_context
 from ecommerce_intelligence.ai.llm.factory import get_llm_provider
+from ecommerce_intelligence.ai.brief_repository import save_business_brief
 from ecommerce_intelligence.ai.schemas import BUSINESS_BRIEF_SCHEMA
 
+
+
+# Configurando o logger
+logger = logging.getLogger(__name__)
 
 def serialize_context(context: dict) -> str:
 
@@ -89,12 +97,13 @@ RECOMENDAÇÕES DE INVESTIGAÇÃO:
   mudanças operacionais ou mudanças de sistema sem evidência
   explícita nos dados.
 
-Para cada sinal:
+  SINAIS ANALÍTICOS:
 
-- "direction" deve ser "up", "down" ou "stable".
-- "severity" deve ser "low", "medium" ou "high".
-- A severidade representa relevância analítica do sinal,
-  não certeza causal.
+- O campo "metric_signals" contém classificações calculadas
+  deterministicamente pela plataforma.
+- "direction" e "severity" já foram definidos pela plataforma.
+- Não altere essas classificações.
+- Utilize essas informações para priorizar a interpretação.
   
 INDICADORES:
 
@@ -102,9 +111,10 @@ INDICADORES:
 """
 
 
-def generate_business_brief(context: dict) -> dict:
-
-    llm = get_llm_provider()
+def generate_business_brief(
+    context: dict,
+    llm,
+) -> dict:
 
     prompt = build_prompt(context)
 
@@ -118,11 +128,100 @@ def generate_business_brief(context: dict) -> dict:
 
 def main():
 
-    context = get_business_context()
+    configure_logger()
 
-    brief = generate_business_brief(context)
+    start_time = time.perf_counter()
 
-    print(brief)
+    logger.info("Iniciando geração do Business Brief")
+
+    try:
+
+        # -----------------------------
+        # Business Context
+        # -----------------------------
+
+        logger.info("Carregando Business Context")
+
+        context = get_business_context()
+
+        reference_date = context["order_date"]
+
+        logger.info(
+            "Business Context carregado | reference_date=%s",
+            reference_date,
+        )
+
+        # -----------------------------
+        # LLM
+        # -----------------------------
+
+        llm = get_llm_provider()
+
+        logger.info(
+            "LLM configurado | provider=%s | model=%s",
+            llm.provider_name,
+            llm.model,
+        )
+
+        logger.info("Gerando Business Brief")
+
+        llm_start = time.perf_counter()
+
+        brief = generate_business_brief(
+            context=context,
+            llm=llm,
+        )
+
+        llm_duration = time.perf_counter() - llm_start
+
+        logger.info(
+            "Business Brief gerado | "
+            "llm_duration_seconds=%.2f",
+            llm_duration,
+        )
+
+        # -----------------------------
+        # Persistence
+        # -----------------------------
+
+        logger.info(
+            "Persistindo Business Brief"
+        )
+
+        save_business_brief(
+            reference_date=reference_date,
+            provider=llm.provider_name,
+            model_name=llm.model,
+            context=context,
+            brief=brief,
+            generation_duration_seconds=llm_duration,
+        )
+
+        duration = time.perf_counter() - start_time
+
+        logger.info(
+            "Business Brief persistido | "
+            "reference_date=%s | "
+            "provider=%s | "
+            "model=%s | "
+            "duration_seconds=%.2f",
+            reference_date,
+            llm.provider_name,
+            llm.model,
+            duration,
+        )
+
+    except Exception:
+
+        duration = time.perf_counter() - start_time
+
+        logger.exception(
+            "Falha na geração do Business Brief | "
+            "duration_seconds=%.2f",
+            duration,
+        )
+
+        raise
 
 
 if __name__ == "__main__":

@@ -79,7 +79,21 @@ with DAG(
 
         dbt_snapshot >> dbt_build
 
+    with TaskGroup(
+    group_id="ai",
+    tooltip="AI Business Intelligence",
+    ) as ai:
+
+        generate_business_brief = BashOperator(
+            task_id="generate_business_brief",
+            bash_command=(
+                "python -m "
+                "ecommerce_intelligence.ai.business_brief"
+            ),
+            execution_timeout=timedelta(minutes=10),
+        )
+
     # =================================================
     # Pipeline
     # =================================================
-    ingestion >> transformation
+    ingestion >> transformation >> ai

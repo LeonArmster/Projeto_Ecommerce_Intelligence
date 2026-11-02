@@ -1,3 +1,6 @@
+# ===============================================
+# Configurando o modelo de LLM que será usado
+# ===============================================
 import os
 from ecommerce_intelligence.ai.llm.base import LLMProvider
 from ecommerce_intelligence.ai.llm.ollama import OllamaProvider
@@ -29,10 +32,10 @@ def get_llm_provider() -> LLMProvider:
 
 
 
-llm = get_llm_provider()
+# llm = get_llm_provider()
 
-response = llm.generate(
-    "Explique em uma frase o que é ticket médio em e-commerce."
-)
+# response = llm.generate(
+#     "Explique em uma frase o que é ticket médio em e-commerce."
+# )
 
-print(response)
+# print(response)

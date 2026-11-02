@@ -2,10 +2,13 @@
 # Configurando o provedor Ollama
 # ===============================================
 from ollama import Client
+
 from ecommerce_intelligence.ai.llm.base import LLMProvider
 
 
 class OllamaProvider(LLMProvider):
+
+    provider_name = "ollama"
 
     def __init__(
         self,
@@ -13,7 +16,11 @@ class OllamaProvider(LLMProvider):
         base_url: str,
     ):
         self.model = model
-        self.client = Client(host=base_url)
+        self.base_url = base_url.rstrip("/")
+
+        self.client = Client(
+            host=self.base_url
+        )
 
     def generate(
         self,

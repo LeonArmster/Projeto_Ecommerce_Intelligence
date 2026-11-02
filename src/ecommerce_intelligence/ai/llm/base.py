@@ -6,6 +6,9 @@ from abc import ABC, abstractmethod
 
 class LLMProvider(ABC):
 
+    provider_name: str
+    model: str
+
     @abstractmethod
     def generate(
         self,
