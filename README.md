@@ -1381,8 +1381,6 @@ Rather than treating Analytics Engineering, Machine Learning and Generative AI a
 
 This project uses synthetic data generated specifically for educational and portfolio purposes.
 
-Add the repository license here before public release.
-
 ---
 
 # Author
