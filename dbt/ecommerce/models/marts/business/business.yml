@@ -1,0 +1,131 @@
+
+version: 2
+
+models:
+  - name: mart_customer_360
+    description: >
+      Visão analítica consolidada por cliente.
+      Uma linha por customer_id, incluindo clientes
+      que ainda não realizaram compras.
+
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+
+      - name: total_orders
+        data_tests:
+          - not_null
+
+      - name: completed_orders
+        data_tests:
+          - not_null
+
+      - name: lifetime_revenue
+        data_tests:
+          - not_null
+
+      - name: customer_segment
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - no_purchase
+                  - future_purchase
+                  - new_customer
+                  - active_repeat
+                  - at_risk
+                  - inactive
+
+
+
+  - name: mart_product_performance
+    description: >
+      Mart de performance comercial de produtos.
+      Granularidade de uma linha por product_id,
+      incluindo produtos sem vendas concluídas.
+
+    columns:
+      - name: product_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
+      - name: total_orders
+        data_tests:
+          - not_null
+
+      - name: completed_orders
+        data_tests:
+          - not_null
+
+      - name: units_sold
+        data_tests:
+          - not_null
+
+      - name: gross_revenue
+        data_tests:
+          - not_null
+
+      - name: discount_amount
+        data_tests:
+          - not_null
+
+      - name: net_revenue
+        data_tests:
+          - not_null
+
+      - name: average_selling_price
+        data_tests:
+          - not_null
+
+
+
+
+  - name: mart_logistics_performance
+    description: >
+      Indicadores logísticos mensais por modalidade
+      de frete, com base no mês de expedição.
+
+    columns:
+      - name: shipment_month
+        data_tests:
+          - not_null
+
+      - name: shipping_type
+        data_tests:
+          - not_null
+
+      - name: total_shipments
+        data_tests:
+          - not_null
+
+      - name: delivered_shipments
+        data_tests:
+          - not_null
+
+      - name: pending_shipments
+        data_tests:
+          - not_null
+
+      - name: late_deliveries
+        data_tests:
+          - not_null
+
+      - name: on_time_deliveries
+        data_tests:
+          - not_null
+
+      - name: overdue_pending_shipments
+        data_tests:
+          - not_null

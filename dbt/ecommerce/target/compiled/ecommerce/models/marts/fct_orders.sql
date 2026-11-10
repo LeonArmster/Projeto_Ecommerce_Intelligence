@@ -5,55 +5,39 @@ with orders as (
     select *
     from "ecommerce"."analytics_intermediate"."int_orders_enriched"
 
-    
+),
 
-        where order_at >= (
-            select
-                max(order_at) - interval '30 days'
-            from "ecommerce"."analytics_marts"."fct_orders"
-        )
+hashed_orders as (
 
-    
+    select
+        orders.*,
+
+        md5(
+            to_jsonb(orders)::text
+        ) as record_hash
+
+    from orders
 
 ),
 
-final as (
+changed_orders as (
 
-    select
-        order_id,
-        customer_id,
-        order_at,
-        order_status,
-        shipping_type,
-        customer_state,
-        customer_birth_date,
-        customer_created_at,
-        item_count,
-        distinct_products,
-        total_quantity,
-        gross_amount,
-        discount_amount,
-        net_amount,
-        total_weight_kg,
-        payment_id,
-        payment_method,
-        payment_amount,
-        installments,
-        payment_status,
-        paid_at,
-        shipment_id,
-        shipped_at,
-        estimated_delivery_at,
-        delivered_at,
-        delivery_duration,
-        is_delayed,
-        review_id,
-        rating,
-        reviewed_at
+    select h.*
 
-    from orders
+    from hashed_orders h
+
+    
+
+    left join "ecommerce"."analytics_marts"."fct_orders" existing
+        on h.order_id = existing.order_id
+
+    where
+        existing.order_id is null
+        or existing.record_hash is distinct from h.record_hash
+
+    
 
 )
 
 select *
-from final
+from changed_orders

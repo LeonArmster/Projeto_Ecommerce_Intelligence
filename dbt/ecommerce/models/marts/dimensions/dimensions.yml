@@ -1,0 +1,132 @@
+
+version: 2
+
+models:
+  - name: dim_customers
+    description: >
+      Dimensão analítica de clientes.
+      Mantém uma linha por customer_id e fornece
+      atributos cadastrais e de calendário.
+
+    columns:
+      - name: customer_id
+        description: "Chave natural e identificador único do cliente."
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+      - name: birth_date
+        description: "Data de nascimento do cliente."
+        data_tests:
+          - not_null
+
+      - name: state
+        description: "UF associada ao cliente."
+        data_tests:
+          - not_null
+
+      - name: created_at
+        description: "Timestamp de criação do cadastro."
+        data_tests:
+          - not_null
+
+      - name: registration_date
+        description: "Data de criação do cadastro."
+        data_tests:
+          - not_null
+
+      - name: registration_year
+        description: "Ano de criação do cadastro."
+        data_tests:
+          - not_null
+
+      - name: registration_month
+        description: "Mês de criação do cadastro."
+        data_tests:
+          - not_null
+
+
+
+
+  - name: dim_products
+    description: >
+      Dimensão analítica de produtos.
+      Mantém uma linha por product_id e disponibiliza
+      atributos cadastrais do catálogo.
+
+    columns:
+      - name: product_id
+        description: "Chave natural do produto."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: category
+        description: "Categoria comercial do produto."
+        data_tests:
+          - not_null
+
+      - name: brand
+        description: "Marca do produto."
+        data_tests:
+          - not_null
+
+      - name: base_price
+        description: "Preço base cadastrado do produto."
+        data_tests:
+          - not_null
+
+      - name: weight_kg
+        description: "Peso do produto em quilogramas."
+        data_tests:
+          - not_null
+
+
+
+  - name: dim_date
+    description: >
+      Dimensão calendário com uma linha por data.
+      Centraliza atributos temporais para análises
+      de vendas, pagamentos e logística.
+
+    columns:
+      - name: date_key
+        description: "Chave de calendário no formato YYYYMMDD."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: full_date
+        description: "Data calendário."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: year
+        data_tests:
+          - not_null
+
+      - name: month
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+      - name: day_of_week_iso
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
+
+      - name: is_weekend
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
