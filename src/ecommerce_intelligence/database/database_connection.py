@@ -29,3 +29,24 @@ def read_query(file_name:str) -> str:
         query = file.read()
 
     return query
+
+
+def execute_sql(
+    connection,
+    file_name: str,
+    fetch_one: bool = False,
+):
+    """
+    Executa um arquivo SQL utilizando uma
+    conexão PostgreSQL existente.
+    """
+
+    query = read_query(file_name)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+
+        if fetch_one:
+            return cursor.fetchone()
+
+        return cursor.rowcount

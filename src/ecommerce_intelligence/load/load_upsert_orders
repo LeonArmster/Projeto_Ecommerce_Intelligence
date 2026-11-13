@@ -1,0 +1,41 @@
+
+import logging
+from time import perf_counter
+from ecommerce_intelligence.database.database_connection import db_connection
+from ecommerce_intelligence.load.upsert_database import upsert_orders
+from ecommerce_intelligence.config.config import processed_dir
+
+def main() -> None:
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format=(
+            "%(asctime)s | %(levelname)s | %(message)s"
+        ),
+    )
+
+    start = perf_counter()
+    connection = db_connection()
+
+    try:
+        affected_rows = upsert_orders(
+            connection=connection,
+            file_path= processed_dir/'orders.csv',
+        )
+
+        logging.info(
+            "Linhas inseridas/atualizadas: %s",
+            affected_rows,
+        )
+
+    finally:
+        connection.close()
+
+    logging.info(
+        "Tempo total: %.2f segundos",
+        perf_counter() - start,
+    )
+
+
+if __name__ == "__main__":
+    main()

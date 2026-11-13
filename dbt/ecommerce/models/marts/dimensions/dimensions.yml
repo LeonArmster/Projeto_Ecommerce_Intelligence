@@ -130,3 +130,32 @@ models:
           - accepted_values:
               arguments:
                 values: [true, false]
+
+
+
+  - name: dim_customers_history
+    description: >
+      Dimensão histórica de clientes utilizando SCD Type 2.
+      Preserva versões cadastrais capturadas pelo snapshot.
+
+    columns:
+      - name: customer_version_key
+        description: Identificador único da versão histórica.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: customer_id
+        description: Identificador de negócio do cliente.
+        data_tests:
+          - not_null
+
+      - name: valid_from
+        description: Início de validade da versão.
+        data_tests:
+          - not_null
+
+      - name: is_current
+        description: Indica se a versão está vigente.
+        data_tests:
+          - not_null
