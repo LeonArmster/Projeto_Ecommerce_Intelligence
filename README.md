@@ -10,7 +10,7 @@ The project covers the complete data lifecycle:
 
 **Data Generation → Data Ingestion → Transformation → Data Quality → Analytics → AI Interpretation → Orchestration**
 
-The platform generates a synthetic e-commerce dataset with millions of records, processes the data through an analytical pipeline built with PostgreSQL and dbt, orchestrates the workflow with Apache Airflow, and uses a local Large Language Model to generate structured business insights.
+The platform generates and incrementally maintains a synthetic e-commerce dataset with millions of records, processes the data through an analytical pipeline built with PostgreSQL and dbt, orchestrates the workflow with Apache Airflow, and uses a local Large Language Model to generate structured business insights.
 
 The central idea of the project is to separate three analytical responsibilities:
 
@@ -24,7 +24,7 @@ Version 1 focuses on building the analytical foundation and the first AI-powered
 
 # Architecture
 
-The V1 architecture follows this flow:
+The architecture supports an initial full load and a recurring incremental ingestion path:
 
 ![E-commerce Intelligence Platform Architecture](docs/images/architecture-v1.png)
 ---
@@ -138,7 +138,7 @@ The dataset contains seven main entities:
 | Shipments | ~960,000 |
 | Reviews | ~576,000 |
 
-The complete dataset contains approximately **6.4 million records**.
+The initial dataset contains approximately **6.4 million records**. Volumes grow as the incremental generator creates additional transactional records; the figures above are baseline estimates, not fixed current counts.
 
 The generator includes intentional relationships between variables to create realistic analytical patterns.
 
@@ -158,31 +158,84 @@ The goal is not to perfectly reproduce a real e-commerce company, but to create 
 
 # Data Ingestion
 
-The ingestion pipeline follows:
+The platform supports **two ingestion modes**: an initial full load and a recurring incremental workflow. Both use Parquet as the persistent synthetic-data format and pipe-delimited CSV files as PostgreSQL ingestion staging.
 
 ```text
-Python Generator
-      │
-      ▼
-Parquet
-      │
-      ▼
-CSV Staging
-      │
-      ▼
-PostgreSQL COPY
-      │
-      ▼
-RAW Schema
+                     INITIAL LOAD                      INCREMENTAL RUN
+                  (bootstrap / reset)                  (daily workflow)
+                          │                                   │
+                 Full data generation                Incremental generation
+                          │                                   │
+                          └───────────┬───────────────────────┘
+                                      ▼
+                                 Parquet files
+                                      │
+                                      ▼
+                               CSV staging files
+                                      │
+                       ┌──────────────┴──────────────┐
+                       ▼                             ▼
+                TRUNCATE + COPY              Temporary tables +
+                 (load_raw.py)                COPY FROM STDIN +
+                                             INSERT / UPSERT
+                                             (load_upsert.py)
+                       │                             │
+                       └──────────────┬──────────────┘
+                                      ▼
+                              PostgreSQL RAW
+                                      │
+                                      ▼
+                               dbt + AI layer
 ```
 
-Parquet is used as the persistent generated data format.
+## Initial Full Load
 
-CSV files are temporarily created because PostgreSQL server-side `COPY` does not directly ingest Parquet files.
+`ecommerce_intelligence.load.load_raw` is retained for initial database population or deliberate reloads. It uses `TRUNCATE` and PostgreSQL `COPY` to load the seven RAW entities: `customers`, `products`, `orders`, `order_items`, `payments`, `shipments`, and `reviews`.
 
-The Docker environment exposes the data directory to PostgreSQL so the database can perform high-performance bulk ingestion.
+## Incremental Synthetic Data Generation
 
-The RAW layer preserves the source structure before analytical transformations are applied.
+`ecommerce_intelligence.generator.generate_incremental` updates the existing synthetic datasets without recreating the complete history. `customers` and `products` remain static reference datasets; the five transactional datasets are maintained incrementally:
+
+- **Orders:** generate new orders for dates not yet processed.
+- **Order items:** generate items for newly created orders.
+- **Payments:** generate payments for new orders and update pending payment outcomes.
+- **Shipments:** create eligible shipment records and update pending shipping/delivery events.
+- **Reviews:** generate eligible reviews for delivered orders.
+
+The generator uses existing Parquet data to determine what needs to be created or updated. Re-running it without new eligible data should not create duplicate business records.
+
+## CSV Staging
+
+`ecommerce_intelligence.transform.prepare_staging` converts the seven Parquet datasets to pipe-delimited CSV files. Generator-only scheduling columns (such as `scheduled_paid_at`, `scheduled_shipped_at`, and `scheduled_delivered_at`) are excluded from the corresponding CSV exports because they are not part of the RAW table schemas.
+
+## Incremental PostgreSQL RAW Loading
+
+`ecommerce_intelligence.load.load_upsert` orchestrates the five transactional RAW tables in dependency order:
+
+```text
+orders → order_items → payments → shipments → reviews
+```
+
+A reusable `upsert_table()` function in `load/upsert_database.py` performs each table load within a database transaction:
+
+1. Create a temporary table using a table-specific SQL file.
+2. Stream the CSV into the temporary table using PostgreSQL `COPY FROM STDIN`.
+3. Execute the table-specific `INSERT ... ON CONFLICT` statement.
+4. Commit on success or roll back the table transaction on failure.
+
+SQL is kept in separate files under `sql/`, following the naming convention `create_temp_<table>.sql`, `copy_temp_<table>.sql`, and `upsert_<table>.sql`.
+
+| RAW table | Conflict strategy |
+|---|---|
+| `orders` | Update existing orders only when values differ |
+| `order_items` | Insert missing items; ignore existing IDs |
+| `payments` | Update payment status and other changed fields |
+| `shipments` | Update shipping and delivery fields when changed |
+| `reviews` | Insert missing reviews; ignore existing IDs |
+
+This design avoids duplicate records and unnecessary updates during repeated loads. The loader still reads the **full historical CSV** for each transactional table; incremental behavior currently applies to the database changes, not to the volume of CSV data scanned. Delta-only CSV extraction is a potential future optimization, not part of the current implementation.
+
+**Validation:** A completed incremental RAW run processed all five tables with **zero affected rows in 10.75 seconds** when the destination was already synchronized. The complete Airflow workflow was also executed successfully after the integration changes.
 
 ---
 
@@ -700,88 +753,66 @@ This is especially important when the AI task runs under Airflow retry policies.
 
 # Apache Airflow Orchestration
 
-Apache Airflow orchestrates the complete workflow.
-
-The V1 DAG is organized into three TaskGroups:
+Apache Airflow orchestrates the complete workflow using the **LocalExecutor** in Docker Compose. The DAG is `ecommerce_intelligence_pipeline` and is organized into three TaskGroups:
 
 ```text
 INGESTION
-    │
-    ├── generate_data
-    ├── prepare_staging
-    └── load_raw
-            │
-            ▼
+    generate_data (incremental)
+          ↓
+    prepare_staging
+          ↓
+    load_raw (task ID retained; executes load_upsert.py)
+          ↓
 TRANSFORMATION
-    │
-    ├── dbt_build
-    └── dbt_snapshot
-            │
-            ▼
+    dbt_snapshot
+          ↓
+    dbt_build (models + configured tests)
+          ↓
 AI
-    │
-    └── generate_business_brief
+    generate_business_brief
 ```
 
-The dependency is:
+The TaskGroup dependency is `ingestion >> transformation >> ai`. The AI stage runs only after successful dbt transformation and configured data-quality tests.
 
-```text
-ingestion >> transformation >> ai
-```
+The DAG uses retry policies and task-level logs for observability. Its recurring schedule is configured as `0 6 * * *` (daily at 06:00 **in the DAG's configured timezone**; check timezone settings before enabling automatic runs). Manual DAG runs are also supported and were used to validate the complete incremental workflow.
 
-The AI stage only executes after the transformation stage succeeds.
-
-Since `dbt build` includes the configured data-quality tests, a failed critical test prevents the downstream AI stage from executing normally.
-
-The complete V1 pipeline is orchestrated by Apache Airflow:
+The existing Airflow task ID `ingestion.load_raw` was preserved for compatibility, although its command now invokes `ecommerce_intelligence.load.load_upsert` rather than the initial full-load module.
 
 ![Airflow DAG](docs/images/complete_dag.png)
 
-The screenshot above shows a successful end-to-end execution of the
-pipeline, from data ingestion through analytical transformation to
-AI Business Brief generation.
+> The screenshot documents an end-to-end execution. Task labels and scheduling settings may differ from the latest incremental configuration if the image has not yet been refreshed.
 
 ---
 
 # End-to-End Execution
 
-A successful V1 execution performs the complete flow:
+A successful recurring execution performs the complete flow:
 
 ```text
-Generate millions of synthetic records
-                │
-                ▼
-        Prepare staging files
-                │
-                ▼
-       Load PostgreSQL RAW
-                │
-                ▼
-         Execute dbt models
-                │
-                ▼
-         Execute dbt tests
-                │
-                ▼
-          Update snapshots
-                │
-                ▼
-      Build analytical context
-                │
-                ▼
-     Apply deterministic rules
-                │
-                ▼
-        Call local Qwen3 8B
-                │
-                ▼
-       Validate structured output
-                │
-                ▼
-     Persist AI Business Brief
+Generate new synthetic records and update pending events
+                          ↓
+               Persist Parquet datasets
+                          ↓
+                  Prepare CSV staging
+                          ↓
+             Load PostgreSQL RAW via UPSERT
+                          ↓
+                 Execute dbt snapshots
+                          ↓
+             Build dbt models and run tests
+                          ↓
+                 Build business context
+                          ↓
+               Apply deterministic rules
+                          ↓
+                   Call local Qwen3 8B
+                          ↓
+              Validate structured output
+                          ↓
+               Persist AI Business Brief
 ```
 
-The complete workflow has been successfully executed through Apache Airflow.
+The complete incremental workflow has been tested successfully through Apache Airflow. Initial full loading remains available as a separate bootstrap operation.
 
 ---
 
@@ -986,19 +1017,28 @@ This process:
 
 # Running through Airflow
 
-The primary execution method for the complete V1 pipeline is Apache Airflow.
+The main DAG is `ecommerce_intelligence_pipeline`, defined in `airflow/dags/ecommerce_pipeline.py`.
 
-The DAG is:
+After starting Docker Compose, check DAG discovery and the configured executor:
 
-```text
-ecommerce_intelligence_pipeline
+```powershell
+docker compose exec airflow-scheduler airflow dags list
+docker compose exec airflow-scheduler airflow config get-value core executor
 ```
 
-During development, the pipeline can be triggered manually through the Airflow interface.
+The validated development setup uses `LocalExecutor`; no dedicated Celery worker is required. The DAG can be triggered manually through the Airflow UI at `http://localhost:8080`.
 
-The current V1 pipeline intentionally uses manual execution while the ingestion architecture still performs full synthetic-data generation and RAW loading.
+The incremental ingestion modules can also be run locally, independently of Airflow:
 
-A production-style recurring schedule should only be introduced after the ingestion strategy becomes incremental.
+```powershell
+uv run python -m ecommerce_intelligence.generator.generate_incremental
+uv run python -m ecommerce_intelligence.transform.prepare_staging
+uv run python -m ecommerce_intelligence.load.load_upsert
+```
+
+For a fresh database, use the existing initial-generation and `ecommerce_intelligence.load.load_raw` bootstrap path first. Do not substitute the incremental generator for the initial dataset creation process.
+
+The DAG is configured for daily scheduling (`0 6 * * *`). Confirm the intended timezone and unpause the DAG only when automatic execution is desired. Successful manual runs validate the workflow but do not, by themselves, confirm that a scheduled run has occurred.
 
 ---
 
@@ -1016,7 +1056,7 @@ It also supports JSONB, which is useful for AI context and response persistence.
 
 Parquet is the persistent generated-data format.
 
-CSV is used only as an ingestion staging format for PostgreSQL server-side `COPY`.
+CSV is used as an ingestion staging format. The initial loader uses PostgreSQL server-side `COPY`; the incremental loader streams CSV data through `COPY FROM STDIN` into temporary tables before applying table-specific conflict handling.
 
 ## Why dbt?
 
@@ -1080,7 +1120,7 @@ Known areas for future improvement include:
 - customer creation dates should be fully consistent with order chronology;
 - historical orders should have more realistic status behavior;
 - duplicate products within the same order should be controlled;
-- ingestion is currently based on full regeneration/loading rather than a true daily incremental source;
+- incremental RAW ingestion still scans the full historical CSV for each transactional table; delta-only CSV extraction is deferred as a performance optimization;
 - AI severity thresholds are demonstration business rules rather than universal e-commerce standards;
 - local Ollama inference depends on the host machine being available when the Airflow AI task executes.
 
@@ -1094,10 +1134,10 @@ Version 1 establishes the platform foundation.
 
 Completed capabilities include:
 
-- synthetic data generation;
+- synthetic data generation, including incremental transactional updates;
 - multi-million-row dataset;
 - Parquet storage;
-- PostgreSQL bulk ingestion;
+- PostgreSQL initial bulk ingestion and idempotent transactional RAW UPSERTs;
 - dbt staging models;
 - dbt intermediate models;
 - analytical marts;
@@ -1105,7 +1145,7 @@ Completed capabilities include:
 - incremental models;
 - dbt snapshots;
 - Docker environment;
-- Apache Airflow orchestration;
+- Apache Airflow orchestration with a validated incremental DAG and daily schedule configuration;
 - local LLM integration;
 - provider abstraction;
 - deterministic AI business rules;
@@ -1113,7 +1153,7 @@ Completed capabilities include:
 - PostgreSQL AI persistence;
 - idempotent AI writes;
 - Docker-to-host Ollama communication;
-- end-to-end pipeline execution;
+- successful end-to-end incremental pipeline execution;
 - basic operational observability.
 
 ---
