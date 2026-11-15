@@ -167,13 +167,11 @@ models:
 
       - name: shipped_at
         description: "Data e hora de despacho do pedido."
-        data_tests:
-          - not_null
+
 
       - name: estimated_delivery_at
         description: "Data e hora previstas para a entrega."
-        data_tests:
-          - not_null
+
 
       - name: delivered_at
         description: "Data e hora efetivas da entrega."

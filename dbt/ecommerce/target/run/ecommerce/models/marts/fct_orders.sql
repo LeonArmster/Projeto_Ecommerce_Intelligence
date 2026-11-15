@@ -13,7 +13,7 @@
     
 
     merge into "ecommerce"."analytics_marts"."fct_orders" as DBT_INTERNAL_DEST
-        using "fct_orders__dbt_tmp232542625576" as DBT_INTERNAL_SOURCE
+        using "fct_orders__dbt_tmp041135845149" as DBT_INTERNAL_SOURCE
         on ((DBT_INTERNAL_SOURCE.order_id = DBT_INTERNAL_DEST.order_id))
 
     

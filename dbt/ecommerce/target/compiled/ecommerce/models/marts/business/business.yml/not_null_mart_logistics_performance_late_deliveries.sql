@@ -1,0 +1,11 @@
+
+    
+    
+
+
+
+select late_deliveries
+from "ecommerce"."analytics_marts"."mart_logistics_performance"
+where late_deliveries is null
+
+

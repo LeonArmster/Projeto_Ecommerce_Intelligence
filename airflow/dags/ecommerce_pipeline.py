@@ -1,7 +1,11 @@
+
 # =====================================================
-# DAG do Airflow
+# DAG do Airflow - E-Commerce Intelligence
 # =====================================================
+# Bibliotecas
+import pendulum
 from datetime import datetime, timedelta
+
 from airflow.sdk import DAG, TaskGroup
 from airflow.providers.standard.operators.bash import BashOperator
 
@@ -14,9 +18,9 @@ default_args = {
 
 with DAG(
     dag_id="ecommerce_intelligence_pipeline",
-    description="Pipeline end-to-end da plataforma E-commerce Intelligence",
-    start_date=datetime(2026, 10, 29),
-    schedule=None,
+    description="Pipeline incremental end-to-end da plataforma E-commerce Intelligence",
+    start_date=pendulum.datetime(2026, 10, 29, tz="America/Sao_Paulo"),
+    schedule="0 6 * * *",
     catchup=False,
     default_args=default_args,
     tags=["ecommerce", "analytics-engineering", "dbt"],
@@ -31,7 +35,7 @@ with DAG(
             task_id="generate_data",
             bash_command=(
                 "python -m "
-                "ecommerce_intelligence.generator.generate"
+                "ecommerce_intelligence.generator.generate_incremental"
             ),
         )
 
@@ -47,7 +51,7 @@ with DAG(
             task_id="load_raw",
             bash_command=(
                 "python -m "
-                "ecommerce_intelligence.load.load_raw"
+                "ecommerce_intelligence.load.load_upsert"
             ),
         )
 
@@ -79,9 +83,12 @@ with DAG(
 
         dbt_snapshot >> dbt_build
 
+    # =================================================
+    # 3. AI
+    # =================================================
     with TaskGroup(
-    group_id="ai",
-    tooltip="AI Business Intelligence",
+        group_id="ai",
+        tooltip="AI Business Intelligence",
     ) as ai:
 
         generate_business_brief = BashOperator(
@@ -94,6 +101,6 @@ with DAG(
         )
 
     # =================================================
-    # Pipeline
+    # 4. Pipeline
     # =================================================
     ingestion >> transformation >> ai

@@ -96,7 +96,7 @@ final as (
         case
             when m.last_purchase_at is not null
             then (
-                '{{ var("customer_reference_date") }}'::date
+                '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
                 - m.last_purchase_at::date
             )
         end as days_since_last_purchase

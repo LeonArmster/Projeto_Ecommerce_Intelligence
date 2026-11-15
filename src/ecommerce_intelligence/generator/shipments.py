@@ -165,3 +165,51 @@ def generate_shipments(
             "delivered_at",
         ]
     ]
+
+
+
+
+
+
+def apply_shipment_reference_date(
+    shipments: pd.DataFrame,
+    reference_date,
+) -> pd.DataFrame:
+    """
+    Controla quais eventos logísticos já ocorreram
+    até a data de referência.
+
+    Preserva as datas programadas no Parquet.
+    """
+
+    shipments = shipments.copy()
+
+    reference_date = pd.Timestamp(reference_date)
+
+    # Preservar as datas originalmente calculadas.
+    if "scheduled_shipped_at" not in shipments.columns:
+        shipments["scheduled_shipped_at"] = shipments["shipped_at"]
+
+    if "scheduled_delivered_at" not in shipments.columns:
+        shipments["scheduled_delivered_at"] = shipments["delivered_at"]
+
+    # Restaurar eventos que já ocorreram.
+    shipped_mask = (
+        pd.to_datetime(shipments["scheduled_shipped_at"])
+        <= reference_date
+    )
+
+    delivered_mask = (
+        pd.to_datetime(shipments["scheduled_delivered_at"])
+        <= reference_date
+    )
+
+    shipments["shipped_at"] = shipments[
+        "scheduled_shipped_at"
+    ].where(shipped_mask, pd.NaT)
+
+    shipments["delivered_at"] = shipments[
+        "scheduled_delivered_at"
+    ].where(delivered_mask & shipped_mask, pd.NaT)
+
+    return shipments

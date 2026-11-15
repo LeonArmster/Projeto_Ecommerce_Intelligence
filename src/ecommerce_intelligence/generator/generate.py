@@ -2,6 +2,7 @@
 # Gerador de dados
 # =====================================================
 # Bibliotecas
+from datetime import date, timedelta
 from ecommerce_intelligence.config.config import raw_dir
 from ecommerce_intelligence.generator.customer import generate_customers
 from ecommerce_intelligence.generator.products import generate_products
@@ -16,9 +17,11 @@ from ecommerce_intelligence.generator.reviews import generate_reviews
 def main() -> None:
 
     print("Gerando clientes...")
+    reference_date = date.today() - timedelta(days=1)
 
     customers = generate_customers(
         number_customers=100_000,
+        reference_date=reference_date,
     )
 
     customers.to_parquet(
@@ -47,6 +50,7 @@ def main() -> None:
     orders = generate_orders(
         customers=customers,
         number_orders=1_000_000,
+        reference_date=reference_date,
     )
 
     orders.to_parquet(

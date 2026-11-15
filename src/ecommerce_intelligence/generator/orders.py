@@ -4,11 +4,13 @@
 # Bibliotecas
 import numpy as np
 import pandas as pd
+from datetime import date
 
 
 def generate_orders(
     customers: pd.DataFrame,
     number_orders: int,
+    reference_date: date,
     seed: int = 42,
 ) -> pd.DataFrame:
 
@@ -53,7 +55,7 @@ def generate_orders(
     # -------------------------------------------------
     date_range = pd.date_range(
         start="2024-01-01",
-        end="2026-10-24",
+        end=reference_date,
         freq="D",
     )
 
@@ -133,3 +135,75 @@ def generate_orders(
     ).reset_index(drop=True)
 
     return orders
+
+
+
+
+
+def generate_daily_orders(
+    customers: pd.DataFrame,
+    generation_date: date,
+    start_order_id: int,
+    number_orders: int = 1_000,
+) -> pd.DataFrame:
+    """
+    Gera um lote de pedidos para uma data específica.
+
+    A geração é reproduzível por data.
+    """
+
+    seed = int(generation_date.strftime("%Y%m%d"))
+    rng = np.random.default_rng(seed)
+
+    customer_ids = customers["customer_id"].to_numpy()
+
+    customer_profiles = rng.choice(
+        ["low", "regular", "high"],
+        size=len(customer_ids),
+        p=[0.50, 0.40, 0.10],
+    )
+
+    customer_weights = np.where(
+        customer_profiles == "low",
+        0.5,
+        np.where(
+            customer_profiles == "regular",
+            1.0,
+            3.0,
+        ),
+    )
+
+    customer_probabilities = (
+        customer_weights / customer_weights.sum()
+    )
+
+    selected_customers = rng.choice(
+        customer_ids,
+        size=number_orders,
+        p=customer_probabilities,
+    )
+
+    shipping_types = rng.choice(
+        ["standard", "express", "economy"],
+        size=number_orders,
+        p=[0.60, 0.20, 0.20],
+    )
+
+    order_status = rng.choice(
+        ["completed", "cancelled", "processing"],
+        size=number_orders,
+        p=[0.94, 0.04, 0.02],
+    )
+
+    return pd.DataFrame(
+        {
+            "order_id": np.arange(
+                start_order_id,
+                start_order_id + number_orders,
+            ),
+            "customer_id": selected_customers,
+            "order_date": pd.Timestamp(generation_date),
+            "order_status": order_status,
+            "shipping_type": shipping_types,
+        }
+    )

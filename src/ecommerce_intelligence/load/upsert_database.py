@@ -1,34 +1,48 @@
 
 # =====================================================
-# Incremental RAW - UPSERT
+# Carga incremental RAW - UPSERT
 # =====================================================
-
+# Bibliotecas
 import logging
 from pathlib import Path
-from ecommerce_intelligence.database.database_connection import execute_sql, read_query
+
+from ecommerce_intelligence.database.database_connection import (
+    execute_sql,
+    read_query,
+)
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def upsert_orders(
+def upsert_table(
     connection,
-    file_path: str = "/data/processed/orders.csv",
+    table_name: str,
+    file_path: Path,
 ) -> int:
     """
-    Realiza a ingestão incremental de pedidos.
+    Executa a carga incremental de uma tabela RAW.
 
-    Etapas:
-        1. Cria tabela temporária.
-        2. Carrega CSV via COPY.
-        3. Valida duplicidades.
-        4. Executa UPSERT.
-        5. Confirma a transação.
+    Parameters
+    ----------
+    connection:
+        Conexão ativa com o PostgreSQL.
 
-    Retorna o total de registros inseridos
-    ou atualizados.
+    table_name:
+        Nome da tabela que será carregada.
+
+    file_path:
+        Caminho do arquivo CSV.
+
+    Returns
+    -------
+    int
+        Quantidade de registros inseridos ou atualizados.
     """
 
+    # =================================================
+    # 1. Validar arquivo de origem
+    # =================================================
     path = Path(file_path)
 
     if not path.is_file():
@@ -37,22 +51,24 @@ def upsert_orders(
         )
 
     LOGGER.info(
-        "Iniciando UPSERT de raw.orders."
+        "Iniciando carga incremental de raw.%s.",
+        table_name,
     )
 
-    # A conexão deve estar em autocommit=False
-    # e sem transação previamente aberta.
+    # =================================================
+    # 2. Executar carga em transação
+    # =================================================
     with connection.transaction():
 
-        # 1. Criação da tabela temporária
+        # Criar tabela temporária
         execute_sql(
             connection,
-            "create_temp_orders.sql",
+            f"create_temp_{table_name}.sql",
         )
 
-        # 2. Carregamento do CSV
+        # Carregar CSV na tabela temporária
         copy_query = read_query(
-            "copy_temp_orders.sql"
+            f"copy_temp_{table_name}.sql"
         )
 
         with connection.cursor() as cursor:
@@ -64,28 +80,18 @@ def upsert_orders(
                     while chunk := file.read(1024 * 1024):
                         copy.write(chunk)
 
-        # 3. Validação de duplicidades
-        duplicate = execute_sql(
-            connection,
-            "check_duplicate_orders.sql",
-            fetch_one=True,
-        )
-
-        if duplicate is not None:
-            raise ValueError(
-                "Arquivo contém order_id duplicado: "
-                f"{duplicate[0]}"
-            )
-
-        # 4. Inserção e atualização
+        # Inserir ou atualizar registros
         affected_rows = execute_sql(
             connection,
-            "upsert_orders.sql",
+            f"upsert_{table_name}.sql",
         )
 
+    # =================================================
+    # 3. Registrar resultado
+    # =================================================
     LOGGER.info(
-        "UPSERT concluído. "
-        "Registros inseridos/atualizados: %s",
+        "Carga de raw.%s concluída. Linhas afetadas: %s",
+        table_name,
         affected_rows,
     )
 

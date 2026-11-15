@@ -104,3 +104,31 @@ def generate_payments(
             "paid_at",
         ]
     ]
+
+
+
+
+
+
+
+def calculate_scheduled_paid_at(
+    payments: pd.DataFrame,
+    orders: pd.DataFrame,
+) -> pd.Series:
+    """
+    Calcula a data programada de pagamento
+    de forma determinística por order_id.
+    """
+
+    order_dates = orders.set_index("order_id")["order_date"]
+
+    dates = pd.to_datetime(
+        payments["order_id"].map(order_dates)
+    )
+
+    # Atraso determinístico de 0 a 24 horas.
+    delays = (
+        payments["order_id"].to_numpy(dtype=np.int64) * 17
+    ) % 25
+
+    return dates + pd.to_timedelta(delays, unit="h")

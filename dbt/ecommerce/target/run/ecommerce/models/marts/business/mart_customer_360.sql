@@ -105,7 +105,7 @@ final as (
         case
             when m.last_purchase_at is not null
             then (
-                '2026-11-09'::date
+                '2026-11-15'::date
                 - m.last_purchase_at::date
             )
         end as days_since_last_purchase

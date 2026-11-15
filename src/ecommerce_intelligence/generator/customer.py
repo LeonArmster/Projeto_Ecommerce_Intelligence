@@ -13,6 +13,7 @@ fake = Faker("pt_BR")
 
 def generate_customers(
     number_customers: int,
+    reference_date: date,
     seed: int = 42,
 ) -> pd.DataFrame:
     """
@@ -74,7 +75,7 @@ def generate_customers(
     created_dates = pd.to_datetime(
         rng.integers(
             pd.Timestamp("2022-01-01").value // 10**9,
-            pd.Timestamp("2026-01-01").value // 10**9,
+            (pd.Timestamp(reference_date) + pd.Timedelta(days=1)).value // 10**9,
             size=number_customers,
         ),
         unit="s",
