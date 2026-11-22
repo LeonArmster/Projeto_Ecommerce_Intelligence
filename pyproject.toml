@@ -38,3 +38,10 @@ package = true
 
 [tool.uv.build-backend]
 module-name = "ecommerce_intelligence"
+
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [".git", ".venv", "logs", "data", "dbt"]
+addopts = "-ra"
