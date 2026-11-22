@@ -30,6 +30,11 @@ dbt/target/
 dbt/logs/
 dbt/dbt_packages/
 
+# dbt generated artifacts
+dbt/**/target/
+dbt/**/logs/
+dbt/**/dbt_packages/
+
 # IDE
 .vscode/
 .idea/
