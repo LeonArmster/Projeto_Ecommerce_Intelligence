@@ -4,7 +4,7 @@
 # =====================================================
 # Bibliotecas
 import pendulum
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from airflow.sdk import DAG, TaskGroup
 from airflow.providers.standard.operators.bash import BashOperator
