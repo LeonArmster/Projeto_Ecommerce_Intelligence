@@ -56,6 +56,34 @@ models:
 
 
 
+  - name: mart_customer_cohort_retention
+    description: >
+      Retencao mensal por coorte de primeira compra concluida.
+      Uma linha por cohort_month e activity_month, inclusive meses sem recompra.
+      O mes M0 representa 100% dos clientes da coorte.
+      O periodo termina em customer_reference_date (padrao: data da execucao dbt).
+      O mes corrente pode estar incompleto.
+    columns:
+      - name: cohort_month
+        data_tests:
+          - not_null
+      - name: activity_month
+        data_tests:
+          - not_null
+      - name: months_since_first_purchase
+        data_tests:
+          - not_null
+      - name: cohort_customers
+        data_tests:
+          - not_null
+      - name: active_customers
+        data_tests:
+          - not_null
+      - name: retention_rate_pct
+        data_tests:
+          - not_null
+
+
   - name: mart_product_performance
     description: >
       Mart de performance comercial de produtos.
