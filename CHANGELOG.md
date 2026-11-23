@@ -10,6 +10,10 @@ The `v1.0.0` tag predates this metadata alignment; updating the current package 
 
 ## [Unreleased]
 
+No changes yet.
+
+## [v1.1.0] — 2026-11-23
+
 ### Added
 - Lightweight repository documentation, quality tooling and pipeline baseline for the v1.1 development cycle.
 - Python unit tests and GitHub Actions checks.
@@ -33,4 +37,5 @@ First stable end-to-end E-Commerce Intelligence platform release.
 - Local AI depends on host Ollama availability.
 - Automated Python tests and CI were planned for subsequent development (and have since been introduced in the unreleased v1.1 cycle).
 
+[v1.1.0]: https://github.com/LeonArmster/Projeto_Ecommerce_Intelligence/releases/tag/v1.1.0
 [v1.0.0]: https://github.com/LeonArmster/Projeto_Ecommerce_Intelligence/releases/tag/v1.0.0

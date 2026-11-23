@@ -1,6 +1,6 @@
 [project]
 name = "projeto-e-commerce-intelligence"
-version = "1.0.0"
+version = "1.1.0"
 description = "End-to-end E-commerce Data & AI Engineering project"
 readme = "README.md"
 authors = [
