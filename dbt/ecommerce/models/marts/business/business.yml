@@ -30,6 +30,17 @@ models:
         data_tests:
           - not_null
 
+      - name: is_repeat_customer
+        description: "True when the customer has at least two completed orders."
+        data_tests:
+          - not_null
+
+      - name: days_to_second_purchase
+        description: "Calendar days between the first and second completed purchases; null for customers with fewer than two."
+
+      - name: purchase_frequency_per_month
+        description: "Completed orders per 30 calendar days since the first completed purchase through the reference date; null if no eligible purchase."
+
       - name: customer_segment
         data_tests:
           - not_null

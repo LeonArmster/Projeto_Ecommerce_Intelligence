@@ -27,6 +27,35 @@ orders as (
 
 ),
 
+ranked_completed_orders as (
+
+    select
+        customer_id,
+        order_at,
+        row_number() over (
+            partition by customer_id
+            order by order_at, order_id
+        ) as purchase_number
+
+    from orders
+    where order_status = 'completed'
+
+),
+
+second_purchases as (
+
+    select
+        customer_id,
+        max(order_at) filter (
+            where purchase_number = 2
+        ) as second_purchase_at
+
+    from ranked_completed_orders
+    where purchase_number <= 2
+    group by customer_id
+
+),
+
 customer_metrics as (
 
     select
@@ -93,6 +122,27 @@ final as (
         m.first_purchase_at,
         m.last_purchase_at,
 
+        (coalesce(m.completed_orders, 0) >= 2) as is_repeat_customer,
+
+        case
+            when sp.second_purchase_at is not null
+            then sp.second_purchase_at::date - m.first_purchase_at::date
+        end as days_to_second_purchase,
+
+        case
+            when m.completed_orders > 0
+             and m.first_purchase_at::date <= '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
+            then round(
+                m.completed_orders::numeric * 30.0
+                / greatest(
+                    '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
+                    - m.first_purchase_at::date + 1,
+                    1
+                ),
+                2
+            )
+        end as purchase_frequency_per_month,
+
         case
             when m.last_purchase_at is not null
             then (
@@ -105,6 +155,9 @@ final as (
 
     left join customer_metrics m
         on c.customer_id = m.customer_id
+
+    left join second_purchases sp
+        on c.customer_id = sp.customer_id
 
 )
 
