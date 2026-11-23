@@ -65,6 +65,10 @@ Trigger `ecommerce_intelligence_pipeline` through the Airflow UI at `http://loca
 
 *The screenshot documents a successful execution; task labels and settings may differ from the current incremental configuration.*
 
+## Business Dashboard
+
+A lightweight Streamlit dashboard consumes the dbt analytical marts. See [dashboard setup](dashboard/README.md).
+
 ## Documentation
 
 - [Setup and local execution](docs/setup.md)
