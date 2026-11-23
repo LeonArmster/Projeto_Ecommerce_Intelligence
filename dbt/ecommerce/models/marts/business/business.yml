@@ -7,6 +7,10 @@ models:
       Visão analítica consolidada por cliente.
       Uma linha por customer_id, incluindo clientes
       que ainda não realizaram compras.
+      Inclui todos os clientes da dimensão atual, mas restringe pedidos à
+      customer_reference_date (padrão: data da execução dbt), inclusive.
+      Utiliza o status atual dos pedidos, não reconstrói status históricos.
+      Clientes cadastrados após a referência permanecem na dimensão.
 
     columns:
       - name: customer_id
@@ -48,7 +52,6 @@ models:
               arguments:
                 values:
                   - no_purchase
-                  - future_purchase
                   - new_customer
                   - active_repeat
                   - at_risk
