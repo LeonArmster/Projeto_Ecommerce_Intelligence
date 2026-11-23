@@ -1,5 +1,5 @@
 
-{% set reference_date = var('logistics_reference_date', '2026-11-09') %}
+{% set reference_date = var('logistics_reference_date', run_started_at.strftime('%Y-%m-%d')) %}
 
 with source_metrics as (
 
