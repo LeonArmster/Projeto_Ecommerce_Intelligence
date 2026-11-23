@@ -1,6 +1,8 @@
 
 {{ config(materialized='table') }}
 
+{% set reference_date = var('customer_reference_date', run_started_at.strftime('%Y-%m-%d')) %}
+
 with customers as (
 
     select
@@ -24,6 +26,7 @@ orders as (
         net_amount
 
     from {{ ref('fct_orders') }}
+    where order_at::date <= '{{ reference_date }}'::date
 
 ),
 
@@ -131,11 +134,10 @@ final as (
 
         case
             when m.completed_orders > 0
-             and m.first_purchase_at::date <= '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
             then round(
                 m.completed_orders::numeric * 30.0
                 / greatest(
-                    '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
+                    '{{ reference_date }}'::date
                     - m.first_purchase_at::date + 1,
                     1
                 ),
@@ -146,7 +148,7 @@ final as (
         case
             when m.last_purchase_at is not null
             then (
-                '{{ var("customer_reference_date", run_started_at.strftime("%Y-%m-%d")) }}'::date
+                '{{ reference_date }}'::date
                 - m.last_purchase_at::date
             )
         end as days_since_last_purchase
@@ -167,9 +169,6 @@ select
     case
         when completed_orders = 0
             then 'no_purchase'
-
-        when days_since_last_purchase < 0
-            then 'future_purchase'
 
         when completed_orders = 1
             and days_since_last_purchase <= 90
