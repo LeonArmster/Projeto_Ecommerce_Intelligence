@@ -1,7 +1,8 @@
 
 {{ config(materialized='table') }}
 
-{% set reference_date = var('logistics_reference_date', '2026-11-09') %}
+{# Default to the dbt invocation date; override for reproducible historical runs. #}
+{% set reference_date = var('logistics_reference_date', run_started_at.strftime('%Y-%m-%d')) %}
 
 with shipments as (
 
