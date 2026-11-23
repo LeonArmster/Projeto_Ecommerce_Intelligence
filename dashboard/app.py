@@ -70,8 +70,15 @@ sales["net_sales"] = pd.to_numeric(sales["net_sales"])
 def pct(value):
     return f"{value:.2f}%" if pd.notna(value) else "—"
 
+def compact_amount(value):
+    for divisor, suffix in [(1e9, "B"), (1e6, "M"), (1e3, "K")]:
+        if abs(value) >= divisor:
+            return f"{value / divisor:,.2f}{suffix}"
+    return f"{value:,.2f}"
+
+net_sales = sales.net_sales.sum()
 a, b, c, d = st.columns(4)
-a.metric("Net sales", f"{sales.net_sales.sum():,.2f}")
+a.metric("Net sales", compact_amount(net_sales), help=f"Total net sales: {net_sales:,.2f}")
 b.metric("Repeat purchase rate", pct(customers.repeat_rate))
 c.metric("M1 retention", pct(retention["Retention (%)"].get(1)))
 d.metric("Purchasing customers", f"{int(customers.buyers):,}")
