@@ -198,3 +198,7 @@ The V1 implementation tracks changes in order status.
 This introduces Slowly Changing Dimension concepts and allows historical analysis even when source records change over time.
 
 ---
+
+## V2 Customer Analytics
+
+`mart_customer_360` has one row per current customer. Repeat customers have at least two completed orders; days to second purchase measures calendar days between the first two completed purchases; monthly frequency is completed orders per 30 days of inclusive exposure since first purchase. `mart_customer_cohort_retention` has one row per first-purchase month and activity month, including zero-activity months. M0 is 100%; monthly retention is active customers divided by cohort size, not cumulative retention. Aggregate retention is weighted by eligible cohort size. Both models exclude orders after `customer_reference_date` (default dbt invocation date). Current order statuses and customer dimension are retained, so this is not a historical snapshot. The current month may be incomplete. Streamlit excludes the current calendar month from retention and uses non-cancelled net sales from `fct_daily_sales`.
