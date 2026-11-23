@@ -2,6 +2,12 @@
 
 Notable project changes are recorded here. This project uses versioned GitHub releases; entries describe features actually delivered, not future plans.
 
+## Versioning policy
+
+The repository's GitHub release tags use `vMAJOR.MINOR.PATCH` (for example, `v1.0.0`). The Python package version in `pyproject.toml` uses the same number without the `v` prefix (for example, `1.0.0`). Prepare a version bump and lockfile refresh when cutting a new release; keep changes under `[Unreleased]` until that release is published. Historical tags are not rewritten.
+
+The `v1.0.0` tag predates this metadata alignment; updating the current package metadata does not modify that historical tag.
+
 ## [Unreleased]
 
 ### Added
