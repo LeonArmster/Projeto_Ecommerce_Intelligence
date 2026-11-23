@@ -1,0 +1,21 @@
+# Install once: uv tool run --from pre-commit pre-commit install
+# Run on changed files: uv tool run --from pre-commit pre-commit run
+# Run repository-wide (may expose pre-existing issues):
+# uv tool run --from pre-commit pre-commit run --all-files
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-merge-conflict
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff (incremental checks)
+        entry: uv run --no-sync ruff check
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: true
