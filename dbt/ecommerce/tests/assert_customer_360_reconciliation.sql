@@ -1,3 +1,4 @@
+{% set reference_date = var('customer_reference_date', run_started_at.strftime('%Y-%m-%d')) %}
 
 with orders_metrics as (
 
@@ -24,6 +25,7 @@ with orders_metrics as (
         ) as lifetime_revenue
 
     from {{ ref('fct_orders') }}
+    where order_at::date <= '{{ reference_date }}'::date
     group by customer_id
 
 ),
