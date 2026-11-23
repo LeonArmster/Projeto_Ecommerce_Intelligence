@@ -2,7 +2,6 @@
 # Conexao com o banco
 # ===============================================
 # Bibliotecas
-import os
 import psycopg
 from ecommerce_intelligence.config.config import pg_host, pg_port, pg_user, pg_password, pg_dbname
 from ecommerce_intelligence.config.config import sql_dir
