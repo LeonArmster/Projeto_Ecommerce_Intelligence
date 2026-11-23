@@ -1,0 +1,4 @@
+.block-container {max-width: 1350px; padding-top: 2rem;}
+[data-testid="stMetric"] {border: 1px solid #64748b55; border-radius: 12px; padding: 16px;}
+h1 {letter-spacing: -1.2px;}
+h2, h3 {letter-spacing: -0.4px;}
