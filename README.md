@@ -27,6 +27,7 @@ The platform generates and incrementally maintains a multi-million-row synthetic
 | Analytics Engineering | dbt, SQL, snapshots, data-quality tests |
 | Orchestration | Apache Airflow |
 | Infrastructure | Docker, Docker Compose |
+| Business Intelligence | Streamlit |
 | Local AI | Ollama, Qwen3 8B, JSON Schema |
 | Tests and delivery | pytest, GitHub Actions, Git |
 
@@ -64,6 +65,10 @@ Trigger `ecommerce_intelligence_pipeline` through the Airflow UI at `http://loca
 ![Airflow DAG execution](docs/images/complete_dag.png)
 
 *The screenshot documents a successful execution; task labels and settings may differ from the current incremental configuration.*
+
+## V2 — Analytics Engineering & Business Intelligence
+
+V2 adds dimensional models, customer behavior, product and logistics marts, repeat purchase metrics, monthly cohort retention and a lightweight consumption layer. A targeted dbt build passed all 153 selected nodes with both default and historical customer reference dates. Results use synthetic data and are not market benchmarks.
 
 ## Business Dashboard
 
