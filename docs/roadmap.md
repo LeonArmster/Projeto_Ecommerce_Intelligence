@@ -51,7 +51,7 @@ Focus:
 
 ## V2 — Advanced Analytics Engineering
 
-Planned topics:
+**Status: Core scope complete; release pending.** Customer 360, repeat purchase, cohort retention, product and logistics marts and Streamlit are delivered. The following original topics include optional enhancements not required for V2 closure:
 
 - dimensional modeling;
 - `dim_customers`;
@@ -73,7 +73,11 @@ Planned topics:
 
 ---
 
-## V3 — Machine Learning: Delivery Risk
+## Next phase — AI Engineering
+
+Extend the existing Business Brief to customer, product and logistics contexts; validate structured outputs and factual grounding; then introduce controlled analytical tools for investigation. Keep the local provider and existing dbt metrics. Delivery-risk ML remains a future milestone.
+
+## Future milestone — Machine Learning: Delivery Risk
 
 Goal:
 
