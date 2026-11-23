@@ -1,0 +1,7 @@
+# Start with correctness-oriented rules; expand gradually after assessing legacy code.
+# Do not enable automatic fixes or broad style enforcement across the repository.
+target-version = "py312"
+line-length = 88
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
