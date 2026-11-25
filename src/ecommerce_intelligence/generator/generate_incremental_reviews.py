@@ -8,6 +8,7 @@ import os
 import pandas as pd
 
 from ecommerce_intelligence.config.config import raw_dir
+from ecommerce_intelligence.generator.parquet_io import save_parquet
 
 from ecommerce_intelligence.generator.reviews import (
     generate_daily_reviews,
@@ -154,9 +155,9 @@ def main() -> None:
 
     # O arquivo temporário evita substituir o histórico antes da gravação.
     try:
-        updated.to_parquet(
+        save_parquet(
+            updated,
             temp_path,
-            index=False,
         )
 
         os.replace(temp_path, reviews_path)
