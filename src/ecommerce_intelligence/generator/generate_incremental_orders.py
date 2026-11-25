@@ -12,6 +12,7 @@ import os
 import pandas as pd
 
 from ecommerce_intelligence.config.config import raw_dir
+from ecommerce_intelligence.generator.parquet_io import save_parquet
 
 from ecommerce_intelligence.generator.generation_dates import (
     get_reference_date,
@@ -171,9 +172,9 @@ def main() -> None:
 
     # O arquivo temporário evita substituir o histórico antes da gravação.
     try:
-        updated_orders.to_parquet(
+        save_parquet(
+            updated_orders,
             temp_path,
-            index=False,
         )
 
         os.replace(temp_path, orders_path)
