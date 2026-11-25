@@ -9,6 +9,7 @@ import os
 import pandas as pd
 
 from ecommerce_intelligence.config.config import raw_dir
+from ecommerce_intelligence.generator.parquet_io import save_parquet
 
 from ecommerce_intelligence.generator.payments import (
     generate_payments,
@@ -151,9 +152,9 @@ def main() -> None:
 
     # Evita substituir o histórico antes de concluir a gravação.
     try:
-        updated_payments.to_parquet(
+        save_parquet(
+            updated_payments,
             temp_path,
-            index=False,
         )
 
         os.replace(temp_path, payments_path)

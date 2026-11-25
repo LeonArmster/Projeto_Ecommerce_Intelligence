@@ -1,0 +1,3 @@
+# Cross-warehouse portability
+
+Databricks rejected the original customer Parquet with `PARQUET_TYPE_ILLEGAL` for `TIMESTAMP(NANOS,false)`. Writing with PyArrow `coerce_timestamps="us"` and `allow_truncated_timestamps=False` resolved the observed read failure. All initial and incremental generator writes now share this configuration. Existing files are not automatically converted. Convert the same existing dataset into a separate directory before cloud ingestion; do not regenerate independent datasets for warehouse reconciliation. Keep incremental atomic replacement and reject precision loss. Databricks customer read and CTAS were validated manually; complete dataset and BigQuery compatibility remain to be validated.
