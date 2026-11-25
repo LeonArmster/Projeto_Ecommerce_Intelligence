@@ -51,7 +51,7 @@ Focus:
 
 ## V2 — Advanced Analytics Engineering
 
-**Status: Core scope complete; release pending.** Customer 360, repeat purchase, cohort retention, product and logistics marts and Streamlit are delivered. The following original topics include optional enhancements not required for V2 closure:
+**Status: Core scope released in v2.0.0.** Customer 360, repeat purchase, cohort retention, product and logistics marts and Streamlit are delivered. The following original topics include optional enhancements not required for V2 closure:
 
 - dimensional modeling;
 - `dim_customers`;
@@ -73,163 +73,28 @@ Focus:
 
 ---
 
-## Next phase — AI Engineering
+## V2.1 — CI/CD and documentation
 
-Extend the existing Business Brief to customer, product and logistics contexts; validate structured outputs and factual grounding; then introduce controlled analytical tools for investigation. Keep the local provider and existing dbt metrics. Delivery-risk ML remains a future milestone.
+Partially delivered. Review remaining CI, portability, contracts, freshness and documentation gaps as needed for cloud migration; avoid unrelated expansion.
 
-## Future milestone — Machine Learning: Delivery Risk
+## V3.0 — Multi-warehouse Analytics Engineering
 
-Goal:
+Databricks first, BigQuery second; retain PostgreSQL as the local baseline.
 
-> Predict the probability that an order will be delivered late.
+- Databricks: workspace, Unity Catalog, schemas, Parquet ingestion into RAW Delta tables, dbt-databricks target, incremental merge and tests.
+- BigQuery: budget controls, dbt-bigquery target, load jobs, partitioning and clustering.
+- Audit warehouse-specific SQL and use adapter-aware macros where necessary.
+- Compare metric results, test coverage, build times and costs across targets.
+- Document portability and publish v3.0.0 after successful builds on PostgreSQL and both cloud targets. Genie is optional, subject to availability.
 
-Planned components:
+## V3.1 — Consumption layer
 
-```text
-dbt Feature Mart
-      ↓
-Training Dataset
-      ↓
-ML Training
-      ↓
-Experiment Tracking
-      ↓
-Model
-      ↓
-Predictions
-      ↓
-Explainability
-```
+Streamlit MVP delivered early in v2.0.0. No further dashboard development required unless a concrete gap emerges.
 
-Potential technologies:
+## V4.0 — AI Analyst and evaluation
 
-- scikit-learn;
-- XGBoost;
-- CatBoost;
-- MLflow;
-- SHAP.
+Preserve the existing local Business Brief. Extend semantic context using dbt manifest metadata, controlled analytical tools, read-only SQL guardrails, Python agent loop, traces and a 30-question evaluation dataset. Compare accuracy, refusal behavior, latency and cost. Frameworks and MCP are optional.
 
----
+## Future backlog
 
-## V4 — Customer Intelligence
-
-Potential capabilities:
-
-- RFM analysis;
-- customer segmentation;
-- customer behavior features;
-- repeat-purchase propensity;
-- customer lifetime value;
-- customer profiles.
-
----
-
-## V5 — AI Data Analyst
-
-The current Business Brief is intentionally limited to interpreting predefined metrics.
-
-A future AI Analyst will be able to investigate analytical questions using controlled tools.
-
-Example:
-
-```text
-User:
-"Why did sales decrease?"
-
-        ↓
-
-AI Analyst
-
-        ├── investigates categories
-        ├── investigates regions
-        ├── investigates customers
-        ├── investigates logistics
-        └── compares periods
-
-        ↓
-
-Evidence-based synthesis
-```
-
-Planned concepts:
-
-- tool calling;
-- semantic context;
-- controlled analytical tools;
-- context engineering;
-- AI guardrails.
-
----
-
-## V6 — Application Layer
-
-Expose the platform through an application.
-
-Potential architecture:
-
-```text
-Frontend
-   │
-   ▼
-FastAPI
-   │
-   ├── Analytics
-   ├── Machine Learning
-   └── AI
-          │
-          ▼
-      PostgreSQL
-```
-
-Potential deployment options include Supabase for lightweight public data access.
-
----
-
-## V7 — Databricks / Lakehouse
-
-The same project will later be adapted to a Lakehouse architecture.
-
-Potential architecture:
-
-```text
-Object Storage
-      ↓
-Bronze
-      ↓
-Silver
-      ↓
-Gold
-      ↓
-Delta Lake
-```
-
-Planned technologies:
-
-- PySpark;
-- Delta Lake;
-- Databricks;
-- MLflow;
-- Unity Catalog;
-- Databricks Workflows;
-- Model Serving.
-
-The synthetic dataset can also be scaled from millions to tens or hundreds of millions of records to create a workload where distributed processing has a clear technical purpose.
-
----
-
-## V8 — Azure Cloud Architecture
-
-Final infrastructure evolution may include:
-
-- Azure Data Lake Storage;
-- Azure Databricks;
-- secrets and identity management;
-- cloud networking;
-- deployment;
-- monitoring;
-- cost management;
-- CI/CD.
-
-Cloud resources will be introduced only when they provide a clear architectural learning objective.
-
----
+Delivery-risk ML, advanced customer intelligence, FastAPI, Azure and full lakehouse expansion are deferred until after V4 and require a clear learning objective.
