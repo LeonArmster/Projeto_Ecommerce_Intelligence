@@ -5,6 +5,7 @@ import os
 import pandas as pd
 
 from ecommerce_intelligence.config.config import raw_dir
+from ecommerce_intelligence.generator.parquet_io import save_parquet
 
 from ecommerce_intelligence.generator.shipments import (
     generate_shipments,
@@ -133,9 +134,9 @@ def main() -> None:
     temp_path = shipments_path.with_suffix(".tmp.parquet")
 
     try:
-        updated.to_parquet(
+        save_parquet(
+            updated,
             temp_path,
-            index=False,
         )
 
         os.replace(temp_path, shipments_path)
