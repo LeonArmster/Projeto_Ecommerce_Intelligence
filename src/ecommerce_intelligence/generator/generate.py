@@ -4,6 +4,7 @@
 # Bibliotecas
 from datetime import date, timedelta
 from ecommerce_intelligence.config.config import raw_dir
+from ecommerce_intelligence.generator.parquet_io import save_parquet
 from ecommerce_intelligence.generator.customer import generate_customers
 from ecommerce_intelligence.generator.products import generate_products
 from ecommerce_intelligence.generator.orders import generate_orders
@@ -24,9 +25,9 @@ def main() -> None:
         reference_date=reference_date,
     )
 
-    customers.to_parquet(
+    save_parquet(
+        customers,
         raw_dir / "customers.parquet",
-        index=False,
     )
 
     print(f"Clientes gerados: {len(customers):,}")
@@ -37,9 +38,9 @@ def main() -> None:
         number_products=20_000,
     )
 
-    products.to_parquet(
+    save_parquet(
+        products,
         raw_dir / "products.parquet",
-        index=False,
     )
 
     print(f"Produtos gerados: {len(products):,}")
@@ -53,9 +54,9 @@ def main() -> None:
         reference_date=reference_date,
     )
 
-    orders.to_parquet(
+    save_parquet(
+        orders,
         raw_dir / "orders.parquet",
-        index=False,
     )
 
     print(f"Pedidos gerados: {len(orders):,}")
@@ -68,9 +69,9 @@ def main() -> None:
         products=products,
     )
 
-    order_items.to_parquet(
+    save_parquet(
+        order_items,
         raw_dir / "order_items.parquet",
-        index=False,
     )
 
     print(
@@ -86,9 +87,9 @@ def main() -> None:
         order_items=order_items,
     )
 
-    payments.to_parquet(
+    save_parquet(
+        payments,
         raw_dir / "payments.parquet",
-        index=False,
     )
 
     print(f"Pagamentos gerados: {len(payments):,}")
@@ -101,9 +102,9 @@ def main() -> None:
         customers=customers,
     )
 
-    shipments.to_parquet(
+    save_parquet(
+        shipments,
         raw_dir / "shipments.parquet",
-        index=False,
     )
 
     print(f"Entregas geradas: {len(shipments):,}")
@@ -115,9 +116,9 @@ def main() -> None:
         shipments=shipments,
     )
 
-    reviews.to_parquet(
+    save_parquet(
+        reviews,
         raw_dir / "reviews.parquet",
-        index=False,
     )
 
     print(f"Avaliações geradas: {len(reviews):,}")
